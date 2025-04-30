@@ -1,0 +1,15 @@
+<h1>Inventory Report</h1>
+<table class="table">
+    <tr>
+        <th>Product</th>
+        <th>Warehouse</th>
+        <th>Qty</th>
+    </tr>
+    {% for row in report_data %}
+    <tr>
+        <td>{{ row['Product'] }}</td>
+        <td>{{ row['Warehouse'] }}</td>
+        <td>{{ row['Qty'] }}</td>
+    </tr>
+    {% endfor %}
+</table>
