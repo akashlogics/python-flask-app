@@ -14,9 +14,3 @@ A web application for managing inventory using Flask and SQLite.
 - Add/Edit/View Product Movements
 - Inventory Balance Report
 
-## Screenshots
-![Products Page](screenshots/products.png)
-![Report](screenshots/report.png)
-
-## Demo Video
-[Watch the demo](https://your-video-link.com)
