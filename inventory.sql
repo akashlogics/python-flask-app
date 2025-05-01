@@ -1,7 +1,7 @@
 CREATE TABLE Product (
     product_id VARCHAR(255) PRIMARY KEY,
     name VARCHAR(255)
-)
+);
 CREATE TABLE Location (
     location_id VARCHAR(255) PRIMARY KEY,
     name VARCHAR(255)
