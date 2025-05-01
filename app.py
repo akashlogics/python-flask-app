@@ -4,10 +4,9 @@ from models import db, Product, Location, Movement
 from forms import ProductForm, LocationForm, MovementForm
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key'
+app.config['SECRET_KEY'] = 'e9b1c3d4e5f6a7b8c9d0e1f2a3b4c5d6'
 
-# --- MySQL Database Configuration ---
-# Replace with your actual MySQL credentials and database name
+
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://username:password@localhost/inventory_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_recycle': 280}
