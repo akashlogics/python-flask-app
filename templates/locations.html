@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Locations</h2>
+<a href="{{ url_for('add_location') }}">Add Location</a>
+<table>
+    <tr><th>Code</th><th>Name</th></tr>
+    {% for location in locations %}
+    <tr>
+        <td>{{ location.code }}</td>
+        <td>{{ location.name }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

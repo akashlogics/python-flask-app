@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Product Movements</h2>
+<a href="{{ url_for('add_movement') }}">Record Movement</a>
+<table>
+    <tr>
+        <th>Date/Time</th>
+        <th>Product</th>
+        <th>From</th>
+        <th>To</th>
+        <th>Quantity</th>
+    </tr>
+    {% for m in movements %}
+    <tr>
+        <td>{{ m.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+        <td>{{ m.product.name }}</td>
+        <td>{{ m.from_location.name if m.from_location else '' }}</td>
+        <td>{{ m.to_location.name if m.to_location else '' }}</td>
+        <td>{{ m.quantity }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

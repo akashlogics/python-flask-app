@@ -1,57 +1,110 @@
-from flask import Flask, render_template, request, redirect, url_for
-import sqlite3
+from flask import Flask, render_template, redirect, url_for, request, flash
+from datetime import datetime
+from models import db, Product, Location, Movement
+from forms import ProductForm, LocationForm, MovementForm
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'your-secret-key'
 
-# Database connection
-def get_db_connection():
-    conn = sqlite3.connect('inventory.db')
-    conn.row_factory = sqlite3.Row
-    return conn
+# --- MySQL Database Configuration ---
+# Replace with your actual MySQL credentials and database name
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://username:password@localhost/inventory_db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_recycle': 280}
 
-# Initialize database
-def init_db():
-    conn = get_db_connection()
-    conn.execute('''CREATE TABLE IF NOT EXISTS Product
-                 (product_id TEXT PRIMARY KEY, name TEXT)''')
-    conn.execute('''CREATE TABLE IF NOT EXISTS Location
-                 (location_id TEXT PRIMARY KEY, name TEXT)''')
-    conn.execute('''CREATE TABLE IF NOT EXISTS ProductMovement
-                 (movement_id TEXT PRIMARY KEY, timestamp DATETIME,
-                  from_location TEXT, to_location TEXT, product_id TEXT, qty INTEGER)''')
-    conn.commit()
-    conn.close()
+db.init_app(app)
 
-# Home page
+@app.before_first_request
+def create_tables():
+    db.create_all()
+
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# Product routes
 @app.route('/products')
-def view_products():
-    conn = get_db_connection()
-    products = conn.execute('SELECT * FROM Product').fetchall()
-    conn.close()
+def products():
+    products = Product.query.all()
     return render_template('products.html', products=products)
 
 @app.route('/products/add', methods=['GET', 'POST'])
 def add_product():
-    if request.method == 'POST':
-        # Extract form data and insert into database
-        return redirect(url_for('view_products'))
-    return render_template('add_product.html')
+    form = ProductForm()
+    if form.validate_on_submit():
+        product = Product(code=form.code.data, name=form.name.data)
+        db.session.add(product)
+        db.session.commit()
+        flash('Product added!')
+        return redirect(url_for('products'))
+    return render_template('add_edit_product.html', form=form)
 
-# Similar routes for edit/delete products, locations, movements
+@app.route('/locations')
+def locations():
+    locations = Location.query.all()
+    return render_template('locations.html', locations=locations)
 
-# Report route
+@app.route('/locations/add', methods=['GET', 'POST'])
+def add_location():
+    form = LocationForm()
+    if form.validate_on_submit():
+        location = Location(code=form.code.data, name=form.name.data)
+        db.session.add(location)
+        db.session.commit()
+        flash('Location added!')
+        return redirect(url_for('locations'))
+    return render_template('add_edit_location.html', form=form)
+
+@app.route('/movements')
+def movements():
+    movements = Movement.query.order_by(Movement.timestamp.desc()).all()
+    return render_template('movements.html', movements=movements)
+
+@app.route('/movements/add', methods=['GET', 'POST'])
+def add_movement():
+    form = MovementForm()
+    form.product_id.choices = [(p.id, p.name) for p in Product.query.all()]
+    locations = Location.query.all()
+    form.from_location_id.choices = [(-1, '---')] + [(l.id, l.name) for l in locations]
+    form.to_location_id.choices = [(-1, '---')] + [(l.id, l.name) for l in locations]
+
+    if form.validate_on_submit():
+        from_location = form.from_location_id.data if form.from_location_id.data != -1 else None
+        to_location = form.to_location_id.data if form.to_location_id.data != -1 else None
+        movement = Movement(
+            timestamp=datetime.now(),
+            from_location_id=from_location,
+            to_location_id=to_location,
+            product_id=form.product_id.data,
+            quantity=form.quantity.data
+        )
+        db.session.add(movement)
+        db.session.commit()
+        flash('Movement recorded!')
+        return redirect(url_for('movements'))
+    return render_template('add_edit_movement.html', form=form)
+
 @app.route('/report')
 def report():
-    conn = get_db_connection()
-    report_data = conn.execute('SELECT p.name, l.name, ...').fetchall()
-    conn.close()
+    products = Product.query.all()
+    locations = Location.query.all()
+    report_data = []
+    for product in products:
+        for location in locations:
+            in_count = db.session.query(db.func.sum(Movement.quantity)).filter(
+                Movement.product_id == product.id,
+                Movement.to_location_id == location.id
+            ).scalar() or 0
+            out_count = db.session.query(db.func.sum(Movement.quantity)).filter(
+                Movement.product_id == product.id,
+                Movement.from_location_id == location.id
+            ).scalar() or 0
+            quantity = in_count - out_count
+            report_data.append({
+                'product': product.name,
+                'location': location.name,
+                'quantity': quantity
+            })
     return render_template('report.html', report_data=report_data)
 
 if __name__ == '__main__':
-    init_db()
     app.run(debug=True)

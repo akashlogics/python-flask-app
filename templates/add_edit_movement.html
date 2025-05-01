@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Record Product Movement</h2>
+<form method="post">
+    {{ form.hidden_tag() }}
+    <p>{{ form.product_id.label }}<br>{{ form.product_id() }}</p>
+    <p>{{ form.from_location_id.label }}<br>{{ form.from_location_id() }} <small>(leave blank if adding)</small></p>
+    <p>{{ form.to_location_id.label }}<br>{{ form.to_location_id() }} <small>(leave blank if removing)</small></p>
+    <p>{{ form.quantity.label }}<br>{{ form.quantity() }}</p>
+    <p>{{ form.submit() }}</p>
+</form>
+{% endblock %}
