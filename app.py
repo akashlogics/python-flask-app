@@ -7,14 +7,15 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'e9b1c3d4e5f6a7b8c9d0e1f2a3b4c5d6'
 
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:MySql@http://127.0.0.1:5500//inventory_db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///inventory.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_recycle': 280}
 
 db.init_app(app)
 
-#@app.before_first_request
-def create_tables():
+# Flask 3.x removed before_first_request
+# Using with app.app_context() instead
+with app.app_context():
     db.create_all()
 
 @app.route('/')
@@ -34,7 +35,7 @@ def add_product():
         db.session.add(product)
         db.session.commit()
         flash('Product added!')
-        return redirect(products.html)
+        return redirect(url_for('products'))
     return render_template('add_edit_product.html', form=form)
 
 @app.route('/locations')
@@ -50,7 +51,7 @@ def add_location():
         db.session.add(location)
         db.session.commit()
         flash('Location added!')
-        return redirect(locations.html)
+        return redirect(url_for('locations'))
     return render_template('add_edit_location.html', form=form)
 
 @app.route('/movements')
